@@ -67,6 +67,29 @@ spans. Chunk ids are `uuid5(namespace, f"{doc_id}|{strategy}|{chunk_index}")`, s
 rebuild on unchanged input rewrites byte-identical JSONL — the diff of a rebuild is
 empty unless something actually changed.
 
+"Byte-identical" is a cross-platform claim, and it took two ingredients to make it
+true rather than approximately true:
+
+1. **Newlines are written explicitly.** `Path.write_text()` translates `\n` to `\r\n`
+   on Windows. The artifacts are generated on whatever machine the developer uses and
+   compared against a Linux CI runner, so every writer passes `newline="\n"`. Without
+   it the payload is identical and every line still differs.
+2. **The tokenizer build is pinned.** `build/stats.json` records
+   `parameters.tokenizer_backend`, and CI installs that exact version plus
+   `RAGDOC_TOKENIZER=cl100k_base`. The default `auto` tokenizer selection silently
+   degrades to the regex backend when tiktoken cannot fetch its BPE file — on the
+   strict path a broken tokenizer fails loudly instead of quietly producing a
+   different measurement.
+
+`.gitattributes` pins the repository to `eol=lf` so a Windows checkout cannot
+reintroduce CRLF into the comparison.
+
+When CI reports "artifacts match the code" failing, the order that finds it fastest
+is **bytes before numbers**: hash the files or count `\r` bytes first, then compare
+the parameters block, and only then investigate the statistics. Chasing the numbers
+while the line endings differ costs several rounds of fixing a cause that is not
+there.
+
 ### The safety cap
 
 Each iteration must consume at least one character, so the loop is bounded by the
