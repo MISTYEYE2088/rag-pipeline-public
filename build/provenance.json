@@ -1,0 +1,12 @@
+{
+  "source_repository": "https://github.com/godotengine/godot-docs",
+  "source_commit": "0914a4d43fdce90c21a57374322559baacddf80c",
+  "license": "CC BY 4.0 (documentation prose)",
+  "files": 35,
+  "chunk_parameters": {
+    "chunk_size": 512,
+    "chunk_overlap": 80,
+    "tokenizer": "cl100k_base",
+    "min_section_tokens": 40
+  }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adaptive vs fixed chunking — live comparison</title>
+    <meta
+      name="description"
+      content="The same Godot documentation corpus, indexed twice: adaptive-length chunks versus naive fixed 512-token windows. Same query, two indexes, side by side."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="wrap">
+        <p class="eyebrow">ragdoc · static demo</p>
+        <h1>Same corpus. Same query. Two chunkings.</h1>
+        <p class="lede">
+          Left: chunks cut at content boundaries, sized adaptively.
+          Right: the same documents cut every 512 tokens, the way most
+          quick RAG prototypes do it. Both indexes are built in your browser
+          over the same public documentation.
+        </p>
+        <dl class="corpus-facts" id="corpus-facts">
+          <div><dt>documents</dt><dd data-fact="documents">—</dd></div>
+          <div><dt>corpus tokens</dt><dd data-fact="tokens">—</dd></div>
+          <div><dt>table blocks</dt><dd data-fact="table_blocks">—</dd></div>
+          <div><dt>retrieval</dt><dd class="fact-note">BM25 · in-browser</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="controls" aria-label="Search">
+        <form id="search-form" class="search-row" role="search">
+          <label class="visually-hidden" for="query">Query</label>
+          <input
+            id="query"
+            name="query"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Try: operator precedence · how do I set a default value · shader varying"
+          />
+          <button type="submit">Search</button>
+        </form>
+        <div class="example-row" id="examples" aria-label="Example queries"></div>
+        <p class="retrieval-note">
+          <strong>Retrieval method: BM25 (lexical).</strong>
+          No embedding model, no API key, no network call — the index is
+          precomputed from the committed corpus and scored in your browser. A
+          neural retriever was deliberately left out of this demo; see
+          <a href="architecture.md">architecture.md</a> for why, and what would
+          change to add one.
+        </p>
+      </section>
+
+      <section class="comparison" aria-live="polite">
+        <article class="column" data-strategy="adaptive">
+          <header class="column-head">
+            <h2>Adaptive chunks</h2>
+            <p class="column-sub" data-summary="adaptive">—</p>
+          </header>
+          <ol class="hits" id="hits-adaptive"></ol>
+        </article>
+
+        <article class="column" data-strategy="fixed">
+          <header class="column-head">
+            <h2>Fixed 512-token windows</h2>
+            <p class="column-sub" data-summary="fixed">—</p>
+          </header>
+          <ol class="hits" id="hits-fixed"></ol>
+        </article>
+      </section>
+
+      <section class="detail" id="detail" hidden aria-live="polite">
+        <header class="detail-head">
+          <h2 id="detail-title">Chunk detail</h2>
+          <button type="button" id="detail-close" class="ghost">Close</button>
+        </header>
+        <dl class="detail-meta" id="detail-meta"></dl>
+        <pre class="detail-text" id="detail-text"></pre>
+      </section>
+
+      <section class="damage" aria-labelledby="damage-title">
+        <h2 id="damage-title">What the boundaries did to tables</h2>
+        <p class="damage-lede">
+          Measured, not asserted: every chunk records the character span it came
+          from, so each table block can be checked for a boundary landing inside
+          it. “Fittable” means the table is small enough to have been kept whole
+          in a single chunk.
+        </p>
+        <table class="damage-table" id="damage-table">
+          <thead>
+            <tr>
+              <th scope="col">strategy</th>
+              <th scope="col">chunks</th>
+              <th scope="col">mean tokens</th>
+              <th scope="col">p5 / p95</th>
+              <th scope="col">tables cut</th>
+              <th scope="col">fittable tables cut</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="damage-foot" id="damage-foot"></p>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <p>
+        Corpus: <a href="https://github.com/godotengine/godot-docs">godot-docs</a>
+        <span id="corpus-commit"></span>, CC BY 4.0. Pipeline:
+        <code>ragdoc</code>, MIT.
+      </p>
+      <p class="footer-note" id="build-note"></p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
