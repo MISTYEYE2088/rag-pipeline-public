@@ -110,8 +110,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
     }
     print(json.dumps(payload, indent=2))
     if args.json_out:
-        Path(args.json_out).write_text(json.dumps(payload, indent=2) + "
-", encoding="utf-8")
+        Path(args.json_out).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return 0
 
 
@@ -138,6 +137,12 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("--corpus", required=True)
     report.add_argument("--build", required=True)
     report.add_argument("--json-out", default=None)
+    report.add_argument(
+        "--chunk-size",
+        type=int,
+        default=512,
+        help="chunk budget used to decide whether a table block was fittable",
+    )
     report.add_argument("--tokenizer", default=None)
     report.set_defaults(func=_cmd_report)
 

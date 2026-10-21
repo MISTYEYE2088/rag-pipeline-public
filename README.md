@@ -129,7 +129,7 @@ src/ragdoc/
   readers.py       .txt/.md/.html/.rst dispatch, HTML extraction
   rst_text.py      reStructuredText -> text for corpus prep
   cli.py           build / query / report
-tests/             108 tests, offline
+tests/             123 tests, offline
 corpus/godot-docs/ 35 pinned files (CC BY 4.0) + SOURCES.json
 build/             chunk JSONL + stats.json + provenance.json
 docs/              the static demo (index.html, app.js, data/)
