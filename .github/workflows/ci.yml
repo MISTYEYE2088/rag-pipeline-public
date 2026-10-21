@@ -13,6 +13,10 @@ on:
 # If you bump this, rebuild the artifacts in the same commit.
 env:
   TIKTOKEN_VERSION: "0.14.0"
+  # Force the strict tiktoken path. The default 'auto' silently degrades to the
+  # regex tokenizer when tiktoken cannot fetch its BPE file, which would make a
+  # reproducibility check compare two different tokenizers and call it a code bug.
+  RAGDOC_TOKENIZER: "cl100k_base"
 
 jobs:
   test:
@@ -49,16 +53,14 @@ jobs:
           python tools/build_demo_data.py
           # The build writes no timestamps: a diff here means the committed
           # artifacts no longer match what the code produces from the corpus.
-          if ! git diff --exit-code -- build docs/data; then
-            echo "::error::Rebuilding from the corpus changed the committed artifacts."
-            python - <<'PY'
-            import json, pathlib
-            stats = json.loads(pathlib.Path("build/stats.json").read_text(encoding="utf-8"))
-            print("parameters now:", json.dumps(stats["parameters"], sort_keys=True))
-            PY
-            git diff --stat -- build docs/data
-            git diff -- build docs/data | head -80
-            echo "If tokenizer_backend differs from the committed value, pin TIKTOKEN_VERSION"
-            echo "to the committed version and rebuild. Otherwise the code changed the output."
-            exit 1
+          if git diff --quiet -- build docs/data; then
+            echo "artifacts are byte-reproducible from the corpus"
+            exit 0
           fi
+          # Surface the difference as annotations: they are readable without
+          # authenticated log access, which is how this gets debugged.
+          echo "::error::Rebuilding from the corpus changed the committed artifacts."
+          python -c "import json,pathlib;print('::error::parameters '+json.dumps(json.loads(pathlib.Path('build/stats.json').read_text(encoding='utf-8'))['parameters'],sort_keys=True))" || true
+          git diff --stat -- build docs/data | head -8 | sed 's/^/::error::/' || true
+          git diff -U0 -- build docs/data | grep -E '^[+-][^+-]' | cut -c1-160 | head -10 | sed 's/^/::error::/' || true
+          exit 1
