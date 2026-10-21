@@ -1,0 +1,14 @@
+# Byte-reproducibility guard: the committed artifacts under build/ and docs/data
+# are compared against a rebuild in CI ("Artifacts match the code"). Windows
+# checkouts default to CRLF, which makes every generated file differ from the
+# Linux-built one by an invisible byte. Normalise everything to LF in the repo.
+* text=auto eol=lf
+
+# The corpus is documentation prose; keep it LF too.
+*.rst text eol=lf
+*.md text eol=lf
+
+# Binary-ish artefacts that must never be line-ending translated.
+*.png binary
+*.gif binary
+*.gz binary

@@ -101,6 +101,7 @@ def main() -> int:
             (DEMO_DATA / f"corpus-{strategy}.json").write_text(
                 json.dumps(_compact(records), ensure_ascii=False, separators=(",", ":")) + "\n",
                 encoding="utf-8",
+                newline="\n",
             )
 
         by_document: dict[str, list[ChunkRecord]] = {}
@@ -148,8 +149,8 @@ def main() -> int:
     }
 
     payload = json.dumps(stats, indent=2) + "\n"
-    (BUILD / "stats.json").write_text(payload, encoding="utf-8")
-    (DEMO_DATA / "stats.json").write_text(payload, encoding="utf-8")
+    (BUILD / "stats.json").write_text(payload, encoding="utf-8", newline="\n")
+    (DEMO_DATA / "stats.json").write_text(payload, encoding="utf-8", newline="\n")
 
     sources = ROOT / "corpus" / "SOURCES.json"
     if sources.exists():
@@ -167,6 +168,7 @@ def main() -> int:
             )
             + "\n",
             encoding="utf-8",
+            newline="\n",
         )
 
     print()
