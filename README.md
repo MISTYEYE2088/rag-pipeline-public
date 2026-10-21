@@ -46,7 +46,7 @@ the second chunk is the one that contains the answer to nobody's question.
 ## The measurement
 
 Corpus: 35 files from [godot-docs](https://github.com/godotengine/godot-docs) at a
-pinned commit — 166,995 tokens of tutorials, language reference and generated class
+pinned commit — 166,496 tokens of tutorials, language reference and generated class
 reference, 36 pipe-table blocks containing 743 rows. Tokenizer `cl100k_base`,
 chunk budget 512 tokens, overlap 80.
 
@@ -57,9 +57,9 @@ enough to fit inside one chunk — the ones a chunker could have kept whole.
 
 | strategy | chunks | mean | median | p5 | p95 | min | max | tables cut | **fittable tables cut** |
 |---|---|---|---|---|---|---|---|---|---|
-| **adaptive** | 533 | 305.1 | 319.0 | 63.0 | 538.4 | 29 | 613 | 30.6% (11/36) | **0.0% (0/24)** |
-| fixed 512 | 397 | 493.5 | 512.0 | 345.4 | 512.0 | 112 | 513 | 69.4% (25/36) | **54.2% (13/24)** |
-| fixed 512 + canonicalise | 397 | 456.9 | 472.0 | 318.2 | 503.0 | 102 | 570 | 69.4% (25/36) | **54.2% (13/24)** |
+| **adaptive** | 532 | 304.8 | 319.5 | 63.0 | 538.5 | 29 | 613 | 30.6% (11/36) | **0.0% (0/24)** |
+| fixed 512 | 395 | 494.4 | 512.0 | 337.0 | 512.0 | 111 | 514 | 66.7% (24/36) | **50.0% (12/24)** |
+| fixed 512 + canonicalise | 395 | 457.9 | 473.0 | 311.4 | 503.0 | 101 | 610 | 66.7% (24/36) | **50.0% (12/24)** |
 
 Three things are worth reading twice.
 
@@ -70,8 +70,8 @@ Three things are worth reading twice.
    boundary choice; what the cleanup pass does is rewrite its rows as
    `label: value;` sentences so each chunk still reads like prose instead of
    starting with an orphaned `|`.
-3. **Canonicalising afterwards does not help the fixed strategy at all** (54.2% of
-   fittable tables cut, identical to plain fixed). It shrinks chunks by 8% and it
+3. **Canonicalising afterwards does not help the fixed strategy at all** (50.0% of
+   fittable tables cut, identical to plain fixed). It shrinks chunks by 7% and it
    cannot repair a boundary that has already fallen inside a row. You cannot clean
    your way out of a bad split; the decision has to be made where the boundary is
    chosen.
@@ -175,7 +175,7 @@ Stated plainly, because a demo that overclaims is worse than no demo.
   from that internal system are not part of this repository.
 - **Not a production service.** No incremental indexing, no deletion, no
   concurrency, no observability. It is a batch job that writes files.
-- **The corpus is small on purpose** (35 files, 167k tokens, ~1.8 MB of JSON in the
+- **The corpus is small on purpose** (35 files, 166k tokens, ~1.7 MB of JSON in the
   demo payload). It is a demo, not a benchmark.
 - **The reStructuredText renderer is partial.** It handles the constructs this
   corpus uses; unknown directives keep their body, which is what Sphinx does too.

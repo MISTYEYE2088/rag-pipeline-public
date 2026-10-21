@@ -249,7 +249,22 @@ def _convert_raw_grid_tables(lines: list[str]) -> list[str]:
     return output
 
 
-def render_rst(source: str) -> str:
+def _render_body(body: list[str], *, depth: int) -> list[str]:
+    """Render a directive body that may itself contain directives.
+
+    Documentation nests ``.. table::`` inside admonitions, ``.. code-tab::``
+    inside ``.. tabs::``, and occasionally a whole block inside a custom
+    directive. Emitting such a body verbatim would leak raw markup -- and a grid
+    table's ``+---+`` borders -- into the corpus as if it were prose.
+    """
+
+    if depth > 6 or not body:
+        return [_strip_inline(line) for line in body]
+    nested = render_rst("\n".join(body), _depth=depth + 1)
+    return nested.split("\n")
+
+
+def render_rst(source: str, *, _depth: int = 0) -> str:
     """Render reStructuredText to plain text with ``#`` headings and pipe tables."""
 
     lines = source.replace("\r\n", "\n").replace("\r", "\n").split("\n")
@@ -299,7 +314,7 @@ def render_rst(source: str) -> str:
                 continue
             if name == "list-table":
                 rendered = _render_list_table(body)
-                output.extend(rendered if rendered else [_strip_inline(part) for part in body])
+                output.extend(rendered if rendered else _render_body(body, depth=_depth))
                 if rendered:
                     output.append("")
                 continue
@@ -321,23 +336,21 @@ def render_rst(source: str) -> str:
                 continue
             if name in _ADMONITIONS:
                 label = directive.group("arg").strip() or _ADMONITIONS[name]
-                content = " ".join(_strip_inline(part).strip() for part in body if part.strip())
+                rendered_body = _render_body(body, depth=_depth)
+                content = " ".join(part.strip() for part in rendered_body if part.strip())
                 if content:
                     output.append(f"{label}: {content}")
                     output.append("")
                 continue
             if name == "tabs":
-                # Nested .. code-tab:: blocks live inside this body; re-render so
-                # their code stays fenced instead of leaking into the document as
-                # prose (GDScript comments such as "-----" would otherwise read as
-                # section headings).
-                nested = render_rst("\n".join(body))
-                if nested.strip():
-                    output.append(nested)
+                rendered_body = _render_body(body, depth=_depth)
+                if any(line.strip() for line in rendered_body):
+                    output.extend(rendered_body)
                     output.append("")
                 continue
-            # Unknown directive: keep its body, which is what Sphinx shows too.
-            output.extend(_strip_inline(part) for part in body)
+            # Unknown directive: keep its body, which is what Sphinx shows too --
+            # but render it, or a nested table arrives as raw markup.
+            output.extend(_render_body(body, depth=_depth))
             output.append("")
             continue
 

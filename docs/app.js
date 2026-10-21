@@ -145,17 +145,23 @@ function highlight(text, query) {
 const formatNumber = (value) =>
   typeof value === "number" ? value.toLocaleString("en-US") : String(value ?? "—");
 
+// A real rendered row is written "| cell | cell |" — with whitespace around the
+// cells. That is what separates a table row from an inline substitution marker
+// such as |void|, which shares the delimiters but has no spacing.
+const TABLE_ROW = /\|\s[^|\n]{1,90}?\s\|\s[^|\n]{1,90}?\s\|/;
+
 function badgesFor(chunk) {
   const badges = [];
   const text = chunk.t;
+  const flags = chunk.f || [];
 
-  if (((text.match(/\|/g) || []).length) >= 2) {
+  if (TABLE_ROW.test(text)) {
     badges.push(["pipes", "raw table row"]);
   }
   if (/^[a-z,;:)\]]/.test(text.trimStart())) {
     badges.push(["midsentence", "starts mid-sentence"]);
   }
-  if ((chunk.f || []).includes("canonicalize_pipe_tables")) {
+  if (flags.includes("canonicalize_pipe_tables")) {
     badges.push(["clean", "table → sentences"]);
   }
   return badges;
