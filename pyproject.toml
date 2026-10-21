@@ -16,12 +16,16 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Topic :: Text Processing :: Indexing",
 ]
-dependencies = []
+dependencies = ["tiktoken>=0.7"]
 
 [project.optional-dependencies]
-# Exact cl100k_base token counts. Without it the package falls back to a
-# dependency-free regex tokenizer (see ragdoc.tokenizer).
-tiktoken = ["tiktoken>=0.7"]
+# `tiktoken` is a hard dependency because the published measurement table is
+# cl100k_base. The regex fallback in ragdoc.tokenizer still exists for
+# environments where tiktoken has no wheel, but it counts differently: with the
+# fallback the same corpus measures 156,257 tokens (not 166,496) and adaptive
+# cuts 1 of 26 fittable tables instead of 0 of 24. Keep it as a degraded path,
+# not as the default.
+dev = ["pytest>=8"]
 
 [project.urls]
 Homepage = "https://github.com/MISTYEYE2088/rag-pipeline-public"

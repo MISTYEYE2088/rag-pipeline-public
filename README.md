@@ -79,11 +79,19 @@ Three things are worth reading twice.
 The third row exists because the obvious objection — "just post-process the chunks"
 — deserved a measurement rather than an argument.
 
+> **These numbers are `cl100k_base` numbers, and that matters.** `tiktoken` is a hard
+> dependency for exactly this reason. If it is unavailable the package falls back to a
+> regex tokenizer, the corpus measures 156,257 tokens instead of 166,496, and the table
+> shifts: adaptive cuts 1 of 26 fittable tables (3.8%) and fixed cuts 14 of 26 (53.8%).
+> Same conclusion, different absolute counts — so if you rebuild with the fallback and
+> see different figures, that is the reason, not a regression. `python -m ragdoc report`
+> prints which tokenizer produced the numbers it reports.
+
 ## Quick start
 
 ```bash
 python -m venv .venv && . .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -e ".[tiktoken]" pytest
+pip install -e ".[dev]"
 
 # 1. tests (offline; the tokenizer falls back to a regex backend if tiktoken is absent)
 pytest -q
