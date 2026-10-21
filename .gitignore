@@ -19,3 +19,7 @@ Thumbs.db
 
 # Stray renders
 *.pdf
+
+# Screenshots taken during verification
+build/*.png
+
