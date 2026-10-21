@@ -6,6 +6,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Pin the tokenizer build. The committed artifacts are byte-reproducible only
+# against the exact cl100k_base implementation that produced them: a different
+# tiktoken build can shift token boundaries, which changes chunk text and makes
+# the "artifacts match the code" check fail for a reason unrelated to the code.
+# If you bump this, rebuild the artifacts in the same commit.
+env:
+  TIKTOKEN_VERSION: "0.14.0"
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,16 +22,18 @@ jobs:
       matrix:
         python-version: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      # v6 runs on the Node 24 runtime; v4/v5 still ship Node 20 actions.
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install "tiktoken==${TIKTOKEN_VERSION}" -e ".[dev]"
+          python -c "import tiktoken; print('tiktoken', tiktoken.__version__)"
 
       - name: Tests
         run: pytest -q
@@ -39,4 +49,16 @@ jobs:
           python tools/build_demo_data.py
           # The build writes no timestamps: a diff here means the committed
           # artifacts no longer match what the code produces from the corpus.
-          git diff --exit-code -- build docs/data
+          if ! git diff --exit-code -- build docs/data; then
+            echo "::error::Rebuilding from the corpus changed the committed artifacts."
+            python - <<'PY'
+            import json, pathlib
+            stats = json.loads(pathlib.Path("build/stats.json").read_text(encoding="utf-8"))
+            print("parameters now:", json.dumps(stats["parameters"], sort_keys=True))
+            PY
+            git diff --stat -- build docs/data
+            git diff -- build docs/data | head -80
+            echo "If tokenizer_backend differs from the committed value, pin TIKTOKEN_VERSION"
+            echo "to the committed version and rebuild. Otherwise the code changed the output."
+            exit 1
+          fi

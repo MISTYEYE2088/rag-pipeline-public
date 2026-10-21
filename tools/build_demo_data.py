@@ -56,6 +56,22 @@ def _compact(records: list[ChunkRecord]) -> list[dict]:
     ]
 
 
+def _tokenizer_backend() -> dict[str, str | None]:
+    """Record what actually produced the token counts.
+
+    The committed artifacts are byte-reproducible only against the same tokenizer
+    build. Naming it inside the artifact turns "CI says the diff is non-empty" into
+    "the runner used a different tokenizer", which is a different problem with a
+    different fix.
+    """
+
+    try:
+        import tiktoken  # noqa: PLC0415
+    except ImportError:
+        return {"package": None, "version": None}
+    return {"package": "tiktoken", "version": getattr(tiktoken, "__version__", None)}
+
+
 def main() -> int:
     documents = read_corpus(CORPUS)
     if not documents:
@@ -125,6 +141,7 @@ def main() -> int:
             "chunk_size": CHUNK_SIZE,
             "chunk_overlap": CHUNK_OVERLAP,
             "tokenizer": tokenizer.name,
+            "tokenizer_backend": _tokenizer_backend(),
             "min_section_tokens": BuildOptions().min_section_tokens,
         },
         "strategies": strategies,

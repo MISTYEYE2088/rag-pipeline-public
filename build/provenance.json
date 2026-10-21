@@ -7,6 +7,10 @@
     "chunk_size": 512,
     "chunk_overlap": 80,
     "tokenizer": "cl100k_base",
+    "tokenizer_backend": {
+      "package": "tiktoken",
+      "version": "0.14.0"
+    },
     "min_section_tokens": 40
   }
 }

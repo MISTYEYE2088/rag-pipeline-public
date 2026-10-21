@@ -79,6 +79,13 @@ Three things are worth reading twice.
 The third row exists because the obvious objection — "just post-process the chunks"
 — deserved a measurement rather than an argument.
 
+> **The artifacts are pinned to a tokenizer build.** `build/stats.json` records
+> `parameters.tokenizer_backend` (e.g. `{"package": "tiktoken", "version": "0.14.0"}`),
+> and CI installs that exact version (`env.TIKTOKEN_VERSION`). A different `tiktoken`
+> build can shift token boundaries, which changes chunk text and makes the
+> "artifacts match the code" check fail for a reason that has nothing to do with the
+> code. If you bump the version, rebuild `build/` and `docs/data/` in the same commit.
+
 > **These numbers are `cl100k_base` numbers, and that matters.** `tiktoken` is a hard
 > dependency for exactly this reason. If it is unavailable the package falls back to a
 > regex tokenizer, the corpus measures 156,257 tokens instead of 166,496, and the table
